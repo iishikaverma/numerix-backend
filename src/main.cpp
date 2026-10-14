@@ -8,6 +8,7 @@
 #include "algorithms/newton_raphson.h"
 #include "algorithms/lagrange.h"
 #include "algorithms/newton_divided_difference.h"
+#include "apis/api.h"
 
 using namespace std;
 
@@ -169,6 +170,8 @@ int main()
     cout << "========================================\n";
     cout << "          NUMERIX TEST COMPLETE\n";
     cout << "========================================\n";
+
+    startServer();
 
     return 0;
 }
