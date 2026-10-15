@@ -19,6 +19,7 @@ add_executable(numerix
     src/algorithms/newton_raphson.cpp
     src/algorithms/lagrange.cpp
     src/algorithms/newton_divided_difference.cpp
+    src/utils/expression_parser.cpp
 )
 
 target_link_libraries(numerix PRIVATE
