@@ -21,6 +21,7 @@ add_executable(numerix
     src/algorithms/newton_divided_difference.cpp
     src/utils/expression_parser.cpp
     src/utils/differentiation.cpp
+    src/utils/expression_evaluator.cpp
 )
 
 target_link_libraries(numerix PRIVATE
