@@ -4,7 +4,7 @@
 
 int main() {
 
-    std::string expression = "x^3 - x - 2";
+    std::string expression = "-x^2 + 4*x - 3";
 
     try {
 

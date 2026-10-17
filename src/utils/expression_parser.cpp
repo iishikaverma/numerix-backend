@@ -130,6 +130,22 @@ ExpressionPtr ExpressionParser::parsePrimary() {
 
     char ch = currentChar();
 
+    if (ch == '-')
+    {
+        position++;
+
+        ExpressionPtr operand = parsePrimary();
+
+        auto negativeOne =
+            std::make_shared<ExpressionNode>(-1.0);
+
+        return std::make_shared<ExpressionNode>(
+            NodeType::Multiply,
+            negativeOne,
+            operand
+        );
+    }
+
     // Parentheses
     if (ch == '(') {
         position++;
