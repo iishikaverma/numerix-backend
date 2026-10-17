@@ -26,6 +26,12 @@ void ExpressionParser::skipSpaces() {
 ExpressionPtr ExpressionParser::parse() {
     skipSpaces();
 
+    if (currentChar() == '\0' || currentChar() == ' ') {
+        throw std::runtime_error(
+            "Expression cannot be empty"
+        );
+    }
+
     ExpressionPtr result = parseExpression();
 
     skipSpaces();
