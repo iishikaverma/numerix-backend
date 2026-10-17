@@ -32,9 +32,11 @@ void startServer()
         double b = body["b"].d();
         double tolerance = body["tolerance"].d();
 
-        auto f = [](double x) {
-            return x * x * x - x - 2;
-        };
+        std::string expression = body["expression"].s();
+
+        auto parsed = parseExpression(expression);
+
+        auto f = parsed.evaluate;
 
         BisectionResult result =
             bisection(f, a, b, tolerance, 100);
@@ -46,16 +48,22 @@ void startServer()
         response["error"] = result.error;
         response["converged"] = result.converged;
 
-        crow::json::wvalue steps;
+        crow::json::wvalue steps{
+            crow::json::wvalue::list()
+        };
 
-        for (size_t i = 0; i < result.data.size(); i++)
+        for (const auto& step : result.data)
         {
-            steps[i]["iteration"] = result.data[i].iteration;
-            steps[i]["a"] = result.data[i].a;
-            steps[i]["b"] = result.data[i].b;
-            steps[i]["c"] = result.data[i].c;
-            steps[i]["fc"] = result.data[i].fc;
-            steps[i]["error"] = result.data[i].error;
+            crow::json::wvalue item;
+
+            item["iteration"] = step.iteration;
+            item["a"] = step.a;
+            item["b"] = step.b;
+            item["c"] = step.c;
+            item["fc"] = step.fc;
+            item["error"] = step.error;
+
+            steps[steps.size()] = std::move(item);
         }
 
         response["steps"] = std::move(steps);
@@ -155,9 +163,9 @@ void startServer()
             response["error"] = result.error;
             response["converged"] = result.converged;
 
-            crow::json::wvalue steps(
+            crow::json::wvalue steps{
                 crow::json::wvalue::list()
-            );
+            };
 
             for (const auto& step : result.data) {
 
@@ -170,7 +178,7 @@ void startServer()
                 item["nextX"] = step.nextX;
                 item["error"] = step.error;
 
-                steps.push_back(std::move(item));
+                steps[steps.size()] = std::move(item);
             }
 
             response["steps"] = std::move(steps);
@@ -225,13 +233,19 @@ void startServer()
 
         response["value"] = result.value;
 
-        crow::json::wvalue steps;
+        crow::json::wvalue steps{
+            crow::json::wvalue::list()
+        };
 
-        for (size_t i = 0; i < result.data.size(); i++)
+        for (const auto& step : result.data)
         {
-            steps[i]["index"] = result.data[i].index;
-            steps[i]["basis"] = result.data[i].basis;
-            steps[i]["contribution"] = result.data[i].contribution;
+            crow::json::wvalue item;
+
+            item["index"] = step.index;
+            item["basis"] = step.basis;
+            item["contribution"] = step.contribution;
+
+            steps[steps.size()] = std::move(item);
         }
 
         response["steps"] = std::move(steps);
@@ -278,7 +292,9 @@ void startServer()
         response["value"] = result.value;
 
         // Divided difference table
-        crow::json::wvalue table;
+        crow::json::wvalue table{
+            crow::json::wvalue::list()
+        };
 
         for (size_t i = 0; i < result.table.size(); i++)
         {
