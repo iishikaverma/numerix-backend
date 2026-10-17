@@ -1,4 +1,6 @@
 #include "utils/expression_parser.h"
+#include "utils/differentiation.h"
+#include "utils/expression_evaluator.h"
 
 #include <cctype>
 #include <stdexcept>
@@ -193,4 +195,27 @@ double ExpressionParser::parseNumber() {
     return std::stod(
         expression.substr(start, position - start)
     );
+}
+
+ParsedExpression parseExpression(
+    const std::string& expression
+) {
+    ExpressionParser parser(expression);
+
+    ExpressionPtr originalTree = parser.parse();
+
+    ExpressionPtr derivativeTree =
+        differentiate(originalTree);
+
+    ParsedExpression result;
+
+    result.evaluate = [originalTree](double x) {
+        return evaluateExpression(originalTree, x);
+    };
+
+    result.derivative = [derivativeTree](double x) {
+        return evaluateExpression(derivativeTree, x);
+    };
+
+    return result;
 }

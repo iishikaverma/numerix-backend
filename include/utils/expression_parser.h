@@ -2,6 +2,8 @@
 #define EXPRESSION_PARSER_H
 
 #include "utils/expression_node.h"
+
+#include <functional>
 #include <string>
 
 class ExpressionParser {
@@ -24,5 +26,14 @@ public:
 
     ExpressionPtr parse();
 };
+
+struct ParsedExpression {
+    std::function<double(double)> evaluate;
+    std::function<double(double)> derivative;
+};
+
+ParsedExpression parseExpression(
+    const std::string& expression
+);
 
 #endif
