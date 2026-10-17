@@ -79,27 +79,44 @@ ExpressionPtr ExpressionParser::parseTerm() {
 
         char op = currentChar();
 
-        if (op != '*' && op != '/') {
-            break;
+        if (op == '*' || op == '/') {
+            position++;
+
+            ExpressionPtr right = parsePower();
+
+            if (op == '*') {
+                left = std::make_shared<ExpressionNode>(
+                    NodeType::Multiply,
+                    left,
+                    right
+                );
+            } else {
+                left = std::make_shared<ExpressionNode>(
+                    NodeType::Divide,
+                    left,
+                    right
+                );
+            }
+
+            continue;
         }
 
-        position++;
+        // Implicit multiplication:
+        // 2x
+        // 3(x + 1)
+        if (op == 'x' || op == 'X' || op == '(') {
+            ExpressionPtr right = parsePower();
 
-        ExpressionPtr right = parsePower();
-
-        if (op == '*') {
             left = std::make_shared<ExpressionNode>(
                 NodeType::Multiply,
                 left,
                 right
             );
-        } else {
-            left = std::make_shared<ExpressionNode>(
-                NodeType::Divide,
-                left,
-                right
-            );
+
+            continue;
         }
+
+        break;
     }
 
     return left;

@@ -4,13 +4,13 @@
 
 int main() {
 
-    std::string expression = "-x^2 + 4*x - 3";
+    std::string expression = "2x + 3";
 
     try {
 
         auto parsed = parseExpression(expression);
 
-        double x = 2.0;
+        double x = 4.0;
 
         double functionValue = parsed.evaluate(x);
         double derivativeValue = parsed.derivative(x);
