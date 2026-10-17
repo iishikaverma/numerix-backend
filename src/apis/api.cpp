@@ -4,6 +4,7 @@
 #include "algorithms/newton_raphson.h"
 #include "algorithms/lagrange.h"
 #include "algorithms/newton_divided_difference.h"
+#include "utils/expression_parser.h"
 
 void startServer()
 {
@@ -121,48 +122,69 @@ void startServer()
             return crow::response(400, "Invalid JSON");
         }
 
-        double initialGuess = body["initialGuess"].d();
-        double tolerance = body["tolerance"].d();
+        try 
+        {
 
-        auto f = [](double x) {
-            return x * x * x - x - 2;
-        };
+            std::string expression = body["expression"].s();
 
-        auto derivative = [](double x) {
-            return 3 * x * x - 1;
-        };
+            double initialGuess =
+                body["initialGuess"].d();
 
-        NewtonResult result =
-            newtonRaphson(
+            double tolerance =
+                body["tolerance"].d();
+
+            int maxIterations = 100;
+
+            auto parsed = parseExpression(expression);
+
+            auto f = parsed.evaluate;
+            auto derivative = parsed.derivative;
+
+            auto result = newtonRaphson(
                 f,
                 derivative,
                 initialGuess,
                 tolerance,
-                100
+                maxIterations
             );
 
-        crow::json::wvalue response;
+            crow::json::wvalue response;
 
-        response["root"] = result.root;
-        response["iterations"] = result.iterations;
-        response["error"] = result.error;
-        response["converged"] = result.converged;
+            response["root"] = result.root;
+            response["iterations"] = result.iterations;
+            response["error"] = result.error;
+            response["converged"] = result.converged;
 
-        crow::json::wvalue steps;
+            crow::json::wvalue steps(
+                crow::json::wvalue::list()
+            );
 
-        for (size_t i = 0; i < result.data.size(); i++)
-        {
-            steps[i]["iteration"] = result.data[i].iteration;
-            steps[i]["x"] = result.data[i].x;
-            steps[i]["fx"] = result.data[i].fx;
-            steps[i]["derivative"] = result.data[i].derivative;
-            steps[i]["nextX"] = result.data[i].nextX;
-            steps[i]["error"] = result.data[i].error;
+            for (const auto& step : result.data) {
+
+                crow::json::wvalue item;
+
+                item["iteration"] = step.iteration;
+                item["x"] = step.x;
+                item["fx"] = step.fx;
+                item["derivative"] = step.derivative;
+                item["nextX"] = step.nextX;
+                item["error"] = step.error;
+
+                steps.push_back(std::move(item));
+            }
+
+            response["steps"] = std::move(steps);
+
+            return crow::response(response);
+
         }
+        catch (const std::exception& e) {
 
-        response["steps"] = std::move(steps);
-
-        return crow::response(response);
+            return crow::response(
+                400,
+                e.what()
+            );
+        }
     });
 
     // Lagrange Interpolation API
