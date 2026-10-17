@@ -87,9 +87,11 @@ void startServer()
         double x1 = body["x1"].d();
         double tolerance = body["tolerance"].d();
 
-        auto f = [](double x) {
-            return x * x * x - x - 2;
-        };
+        std::string expression = body["expression"].s();
+
+        auto parsed = parseExpression(expression);
+
+        auto f = parsed.evaluate;
 
         SecantResult result =
             secant(f, x0, x1, tolerance, 100);
