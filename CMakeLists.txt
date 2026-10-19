@@ -24,14 +24,6 @@ add_executable(numerix
     src/utils/expression_evaluator.cpp
 )
 
-add_executable(test_parser
-    tests/test_parser.cpp
-
-    src/utils/expression_parser.cpp
-    src/utils/differentiation.cpp
-    src/utils/expression_evaluator.cpp
-)
-
 target_link_libraries(numerix PRIVATE
     Crow::Crow
     ws2_32
