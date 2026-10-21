@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
+#include <cstdlib>
 
 #include "algorithms/bisection.h"
 #include "algorithms/secant.h"
@@ -14,6 +15,14 @@ using namespace std;
 
 int main()
 {
+    // Normal/server runs start the API directly. Set NUMERIX_DEMO=1 to also
+    // print the console demo output first (keeps production logs clean).
+    if (!std::getenv("NUMERIX_DEMO"))
+    {
+        startServer();
+        return 0;
+    }
+
     cout << fixed << setprecision(6);
 
     cout << "========================================\n";

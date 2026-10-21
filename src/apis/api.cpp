@@ -11,16 +11,54 @@
 #include <vector>
 #include <stdexcept>
 #include <cstdlib>
+#include <sstream>
+#include <unordered_set>
 
-// Allowed CORS origin, read once from the CORS_ORIGIN env var (set on the
-// deployed backend to the frontend's URL). Falls back to local dev.
-static const std::string& corsOrigin()
+// Allowed CORS origins, parsed once from CORS_ORIGIN (a comma-separated list,
+// e.g. "https://app.vercel.app,http://localhost:5173"). Defaults to local dev.
+static const std::unordered_set<std::string>& allowedOrigins()
 {
-    static const std::string origin = []{
+    static const std::unordered_set<std::string> origins = []{
+        std::unordered_set<std::string> set;
         const char* env = std::getenv("CORS_ORIGIN");
-        return std::string(env ? env : "http://localhost:5173");
+        std::string raw = env ? env : "http://localhost:5173";
+
+        std::stringstream stream(raw);
+        std::string item;
+        while (std::getline(stream, item, ','))
+        {
+            size_t start = item.find_first_not_of(" \t");
+            size_t end = item.find_last_not_of(" \t");
+            if (start != std::string::npos)
+            {
+                set.insert(item.substr(start, end - start + 1));
+            }
+        }
+
+        if (set.empty())
+        {
+            set.insert("http://localhost:5173");
+        }
+
+        return set;
     }();
-    return origin;
+
+    return origins;
+}
+
+// Echo the request's Origin when it's in the allow list, so several front-end
+// URLs (production, previews, localhost) can be permitted at the same time.
+static std::string resolveCorsOrigin(const crow::request& req)
+{
+    const std::string requestOrigin = req.get_header_value("Origin");
+    const auto& allowed = allowedOrigins();
+
+    if (!requestOrigin.empty() && allowed.count(requestOrigin))
+    {
+        return requestOrigin;
+    }
+
+    return *allowed.begin();
 }
 
 struct CorsMiddleware
@@ -35,8 +73,10 @@ struct CorsMiddleware
     {
         res.set_header(
             "Access-Control-Allow-Origin",
-            corsOrigin()
+            resolveCorsOrigin(req)
         );
+
+        res.set_header("Vary", "Origin");
 
         res.set_header(
             "Access-Control-Allow-Methods",
@@ -56,15 +96,17 @@ struct CorsMiddleware
     }
 
     void after_handle(
-        crow::request&,
+        crow::request& req,
         crow::response& res,
         context&
     )
     {
         res.set_header(
             "Access-Control-Allow-Origin",
-            corsOrigin()
+            resolveCorsOrigin(req)
         );
+
+        res.set_header("Vary", "Origin");
 
         res.set_header(
             "Access-Control-Allow-Methods",
