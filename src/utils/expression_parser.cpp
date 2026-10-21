@@ -245,17 +245,23 @@ ParsedExpression parseExpression(
 
     ExpressionPtr originalTree = parser.parse();
 
-    ExpressionPtr derivativeTree =
-        differentiate(originalTree);
-
     ParsedExpression result;
 
     result.evaluate = [originalTree](double x) {
         return evaluateExpression(originalTree, x);
     };
 
-    result.derivative = [derivativeTree](double x) {
-        return evaluateExpression(derivativeTree, x);
+    // Differentiate lazily and memoize. Methods that don't need a derivative
+    // (bisection, secant, interpolation) never call this, so expressions whose
+    // derivative is unsupported (e.g. 2^x) still parse and evaluate fine; the
+    // error only surfaces if a derivative is actually requested (Newton-Raphson).
+    auto derivativeCache = std::make_shared<ExpressionPtr>();
+
+    result.derivative = [originalTree, derivativeCache](double x) {
+        if (!*derivativeCache) {
+            *derivativeCache = differentiate(originalTree);
+        }
+        return evaluateExpression(*derivativeCache, x);
     };
 
     return result;

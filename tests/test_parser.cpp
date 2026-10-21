@@ -31,6 +31,17 @@ int main() {
     // Plain x^n unchanged: d(x^3) = 3x^2 -> at x=2, 12.
     assert(approx(parseExpression("x^3").derivative(2), 12.0));
 
+    // Lazy differentiation: 2^x has no supported derivative, but methods that
+    // don't need one must still parse and evaluate it.
+    assert(approx(parseExpression("2^x").evaluate(3), 8.0));
+    bool diffThrew = false;
+    try {
+        parseExpression("2^x").derivative(1);  // only now should it throw
+    } catch (const std::runtime_error&) {
+        diffThrew = true;
+    }
+    assert(diffThrew);
+
     // Fix #2: non-finite power result is a clear error, not a silent NaN/inf.
     bool threw = false;
     try {
