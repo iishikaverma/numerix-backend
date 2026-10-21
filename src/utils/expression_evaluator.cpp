@@ -47,11 +47,20 @@ double evaluateExpression(
                  / denominator;
         }
 
-        case NodeType::Power:
-            return std::pow(
+        case NodeType::Power: {
+            double result = std::pow(
                 evaluateExpression(node->left, x),
                 evaluateExpression(node->right, x)
             );
+
+            if (!std::isfinite(result)) {
+                throw std::runtime_error(
+                    "Math domain error: expression is undefined for this value"
+                );
+            }
+
+            return result;
+        }
     }
 
     throw std::runtime_error(

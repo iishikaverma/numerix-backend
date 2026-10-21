@@ -157,7 +157,9 @@ ExpressionPtr ExpressionParser::parsePrimary() {
     {
         position++;
 
-        ExpressionPtr operand = parsePrimary();
+        // parsePower (not parsePrimary) so unary minus binds looser than '^':
+        // -x^2 => -(x^2), matching standard math convention.
+        ExpressionPtr operand = parsePower();
 
         auto negativeOne =
             std::make_shared<ExpressionNode>(-1.0);
