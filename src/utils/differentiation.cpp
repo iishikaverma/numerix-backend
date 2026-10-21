@@ -100,23 +100,21 @@ ExpressionPtr differentiate(const ExpressionPtr& node) {
         );
     }
 
-    // Power rule for x^n
+    // Power rule with chain rule, for a constant exponent n:
+    // d/dx(u^n) = n * u^(n-1) * u'
     if (node->type == NodeType::Power) {
-
-        // Currently support:
-        // x^constant
 
         if (node->right->type == NodeType::Number) {
 
             double exponent = node->right->value;
 
-            // n * x^(n-1)
             auto coefficient =
                 std::make_shared<ExpressionNode>(exponent);
 
             auto newExponent =
                 std::make_shared<ExpressionNode>(exponent - 1);
 
+            // u^(n-1)
             auto newPower =
                 std::make_shared<ExpressionNode>(
                     NodeType::Power,
@@ -124,10 +122,21 @@ ExpressionPtr differentiate(const ExpressionPtr& node) {
                     newExponent
                 );
 
+            // n * u^(n-1)
+            auto outer =
+                std::make_shared<ExpressionNode>(
+                    NodeType::Multiply,
+                    coefficient,
+                    newPower
+                );
+
+            // * u'  (chain rule; when u = x this is * 1, unchanged)
+            auto baseDerivative = differentiate(node->left);
+
             return std::make_shared<ExpressionNode>(
                 NodeType::Multiply,
-                coefficient,
-                newPower
+                outer,
+                baseDerivative
             );
         }
 

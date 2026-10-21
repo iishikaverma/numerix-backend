@@ -26,6 +26,11 @@ int main() {
     // Derivative of -x^2 is -2x -> at x=3, -6 (confirms corrected tree is differentiated).
     assert(approx(parseExpression("-x^2").derivative(3), -6.0));
 
+    // Power chain rule: d((2x)^3) = 6*(2x)^2 -> at x=1, 24. Base other than x.
+    assert(approx(parseExpression("(2*x)^3").derivative(1), 24.0));
+    // Plain x^n unchanged: d(x^3) = 3x^2 -> at x=2, 12.
+    assert(approx(parseExpression("x^3").derivative(2), 12.0));
+
     // Fix #2: non-finite power result is a clear error, not a silent NaN/inf.
     bool threw = false;
     try {
