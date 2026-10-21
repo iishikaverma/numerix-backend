@@ -24,8 +24,9 @@ add_executable(numerix
     src/utils/expression_evaluator.cpp
 )
 
-target_link_libraries(numerix PRIVATE
-    Crow::Crow
-    ws2_32
-    mswsock
-)
+target_link_libraries(numerix PRIVATE Crow::Crow)
+
+# Windows-only socket libs; Linux (e.g. the Render/Docker build) provides these in libc.
+if(WIN32)
+    target_link_libraries(numerix PRIVATE ws2_32 mswsock)
+endif()

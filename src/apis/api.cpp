@@ -10,6 +10,73 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <cstdlib>
+
+// Allowed CORS origin, read once from the CORS_ORIGIN env var (set on the
+// deployed backend to the frontend's URL). Falls back to local dev.
+static const std::string& corsOrigin()
+{
+    static const std::string origin = []{
+        const char* env = std::getenv("CORS_ORIGIN");
+        return std::string(env ? env : "http://localhost:5173");
+    }();
+    return origin;
+}
+
+struct CorsMiddleware
+{
+    struct context {};
+
+    void before_handle(
+        crow::request& req,
+        crow::response& res,
+        context&
+    )
+    {
+        res.set_header(
+            "Access-Control-Allow-Origin",
+            corsOrigin()
+        );
+
+        res.set_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, OPTIONS"
+        );
+
+        res.set_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type"
+        );
+
+        if (req.method == crow::HTTPMethod::OPTIONS)
+        {
+            res.code = 204;
+            res.end();
+        }
+    }
+
+    void after_handle(
+        crow::request&,
+        crow::response& res,
+        context&
+    )
+    {
+        res.set_header(
+            "Access-Control-Allow-Origin",
+            corsOrigin()
+        );
+
+        res.set_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, OPTIONS"
+        );
+
+        res.set_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type"
+        );
+    }
+};
 
 namespace
 {
@@ -68,7 +135,7 @@ namespace
 
 void startServer()
 {
-    crow::SimpleApp app;
+    crow::App<CorsMiddleware> app;
 
     // Health check
     CROW_ROUTE(app, "/")
@@ -836,5 +903,7 @@ void startServer()
         }
     });
 
-    app.port(8080).multithreaded().run();
+    const char* portEnv = std::getenv("PORT");
+    uint16_t port = portEnv ? static_cast<uint16_t>(std::stoi(portEnv)) : 8080;
+    app.port(port).multithreaded().run();
 }
